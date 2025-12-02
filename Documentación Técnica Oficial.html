@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doc Técnica - Banco Turing DWH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bank: {
+                            dark: '#0f172a',
+                            primary: '#1e3a8a',
+                            light: '#3b82f6',
+                            accent: '#0ea5e9', 
+                            success: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-bank-dark text-white sticky top-0 z-50 shadow-lg border-b-4 border-bank-accent">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-building-columns text-2xl text-bank-accent"></i>
+                    <div>
+                        <span class="font-bold text-xl tracking-tight">Banco Turing</span>
+                        <span class="text-xs block text-slate-400">Gerencia de Datos & Arquitectura</span>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#erd" class="hover:bg-bank-primary px-3 py-2 rounded-md text-sm font-medium transition">Modelo ER</a>
+                        <a href="#dictionary" class="hover:bg-bank-primary px-3 py-2 rounded-md text-sm font-medium transition">Diccionario</a>
+                        <a href="#geo" class="hover:bg-bank-primary px-3 py-2 rounded-md text-sm font-medium transition">Alcance Geográfico</a>
+                        <a href="#connection" class="bg-bank-accent hover:bg-sky-600 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md">Acceso DB</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header -->
+        <header class="mb-12 text-center">
+            <span class="inline-block py-1 px-3 rounded-full bg-sky-100 text-bank-primary text-xs font-bold mb-3">Datawarehouse v3.0 (Schema Completo)</span>
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-4">Documentación Técnica Oficial</h1>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                Especificación técnica detallada del repositorio de datos para análisis de riesgo crediticio. 
+                Documentación sincronizada con el esquema de producción.
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Sidebar -->
+            <aside class="hidden lg:block col-span-1">
+                <div class="sticky top-24 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">Índice</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#erd" class="block text-slate-600 hover:text-bank-primary hover:translate-x-1 transition"><i class="fa-solid fa-project-diagram w-5"></i> Modelo Entidad-Relación</a></li>
+                        <li><a href="#dic-clientes" class="block text-slate-600 hover:text-bank-primary hover:translate-x-1 transition"><i class="fa-solid fa-user w-5"></i> Clientes (13 campos)</a></li>
+                        <li><a href="#dic-solicitudes" class="block text-slate-600 hover:text-bank-primary hover:translate-x-1 transition"><i class="fa-solid fa-file-invoice-dollar w-5"></i> Solicitudes (9 campos)</a></li>
+                        <li><a href="#dic-historial" class="block text-slate-600 hover:text-bank-primary hover:translate-x-1 transition"><i class="fa-solid fa-clock-rotate-left w-5"></i> Historial (9 campos)</a></li>
+                        <li><a href="#dic-bienes" class="block text-slate-600 hover:text-bank-primary hover:translate-x-1 transition"><i class="fa-solid fa-house-chimney w-5"></i> Bienes Raíces (11 campos)</a></li>
+                        <li class="pt-4 border-t border-slate-100 mt-2"><a href="#geo" class="block text-slate-600 hover:text-bank-primary transition"><i class="fa-solid fa-map-location-dot w-5"></i> Alcance Geográfico</a></li>
+                        <li><a href="#connection" class="block text-bank-accent font-bold hover:text-sky-600 transition mt-2"><i class="fa-solid fa-database w-5"></i> Credenciales</a></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Area -->
+            <main class="col-span-1 lg:col-span-3 space-y-12">
+
+                <!-- SECTION: ERD -->
+                <section id="erd" class="scroll-mt-24">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="h-8 w-1 bg-bank-accent rounded-full"></div>
+                        <h2 class="text-2xl font-bold text-slate-800">Modelo de Datos (ERD Completo)</h2>
+                    </div>
+                    
+                    <div class="bg-slate-100 p-6 rounded-xl border border-slate-200 shadow-inner overflow-x-auto">
+                        <div class="min-w-[850px] flex justify-center items-start gap-8 py-8 relative">
+                            
+                            <!-- Tabla: Clientes -->
+                            <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-bank-primary w-72 z-10 relative">
+                                <div class="flex justify-between items-center mb-2 border-b pb-2">
+                                    <h3 class="font-bold text-bank-primary"><i class="fa-solid fa-users mr-2"></i>CLIENTES</h3>
+                                    <span class="text-[10px] bg-slate-200 px-1 rounded">PK: id_cliente</span>
+                                </div>
+                                <ul class="text-[10px] space-y-1 text-slate-600 font-mono leading-tight">
+                                    <li class="flex justify-between font-bold text-bank-primary"><span>id_cliente</span> <i class="fa-solid fa-key text-yellow-500"></i></li>
+                                    <li>ingresos_mensuales</li>
+                                    <li>anios_empleo</li>
+                                    <li>tipo_contrato</li>
+                                    <li>deuda_total</li>
+                                    <li>limite_tc</li>
+                                    <li>comportamiento_pago</li>
+                                    <li>fecha_alta_cliente</li>
+                                    <li>edad</li>
+                                    <li>sexo</li>
+                                    <li>nacionalidad</li>
+                                    <li>comuna</li>
+                                    <li>etnia</li>
+                                </ul>
+                                <!-- Connectors -->
+                                <div class="absolute top-1/2 -right-8 w-8 h-0.5 bg-slate-400"></div>
+                                <div class="absolute top-8 -right-8 w-8 h-0.5 bg-slate-400 rotate-[-25deg] origin-left"></div>
+                                <div class="absolute bottom-8 -right-8 w-8 h-0.5 bg-slate-400 rotate-[25deg] origin-left"></div>
+                            </div>
+
+                            <div class="flex flex-col gap-6">
+                                <!-- Tabla: Solicitudes -->
+                                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500 w-72 ml-8">
+                                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                                        <h3 class="font-bold text-green-700">SOLICITUDES_CREDITO</h3>
+                                        <span class="text-[10px] bg-green-100 text-green-800 px-1 rounded">TARGET</span>
+                                    </div>
+                                    <ul class="text-[10px] space-y-1 text-slate-600 font-mono leading-tight">
+                                        <li class="flex justify-between font-bold"><span>id_solicitud</span> <i class="fa-solid fa-key text-yellow-500"></i></li>
+                                        <li class="flex justify-between text-slate-400"><span>id_cliente</span> <i class="fa-solid fa-link"></i></li>
+                                        <li>monto_solicitado</li>
+                                        <li>plazo_meses</li>
+                                        <li>tipo_producto</li>
+                                        <li>canal_origen</li>
+                                        <li>tasa_interes_anual</li>
+                                        <li>fecha_solicitud</li>
+                                        <li class="font-bold text-green-700">incumplio (Target)</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Tabla: Historial -->
+                                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-slate-500 w-72 ml-8">
+                                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                                        <h3 class="font-bold text-slate-700">HISTORIAL_PAGOS</h3>
+                                    </div>
+                                    <ul class="text-[10px] space-y-1 text-slate-600 font-mono leading-tight">
+                                        <li class="flex justify-between font-bold"><span>id_historial</span> <i class="fa-solid fa-key text-yellow-500"></i></li>
+                                        <li class="flex justify-between text-slate-400"><span>id_cliente</span> <i class="fa-solid fa-link"></i></li>
+                                        <li>tipo_deuda</li>
+                                        <li>monto_cuota</li>
+                                        <li>pagado</li>
+                                        <li>dias_atraso</li>
+                                        <li>fecha_vencimiento</li>
+                                        <li>fecha_pago</li>
+                                        <li>estado_final</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Tabla: Bienes -->
+                                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500 w-72 ml-8">
+                                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                                        <h3 class="font-bold text-purple-700">BIENES_RAICES</h3>
+                                    </div>
+                                    <ul class="text-[10px] space-y-1 text-slate-600 font-mono leading-tight">
+                                        <li class="flex justify-between font-bold"><span>id_bien</span> <i class="fa-solid fa-key text-yellow-500"></i></li>
+                                        <li class="flex justify-between text-slate-400"><span>id_cliente</span> <i class="fa-solid fa-link"></i></li>
+                                        <li>tipo_propiedad</li>
+                                        <li>comuna_propiedad</li>
+                                        <li>region_propiedad</li>
+                                        <li>avaluo_fiscal</li>
+                                        <li>hipotecado</li>
+                                        <li>monto_hipoteca</li>
+                                        <li>entidad_hipotecaria</li>
+                                        <li>meses_morosidad</li>
+                                        <li>en_remate</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-center text-xs text-slate-500 mt-2">Esquema Relacional 1 a N (Un Cliente -> Múltiples productos/historiales)</p>
+                    </div>
+                </section>
+
+                <!-- SECTION: DICTIONARY -->
+                <section id="dictionary" class="scroll-mt-24">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="h-8 w-1 bg-bank-accent rounded-full"></div>
+                        <h2 class="text-2xl font-bold text-slate-800">Diccionario de Datos Detallado</h2>
+                    </div>
+
+                    <!-- Clientes -->
+                    <div id="dic-clientes" class="mb-8">
+                        <h3 class="text-lg font-bold text-bank-primary mb-3 bg-slate-100 p-2 rounded border-l-4 border-bank-primary">
+                            Tabla: <code>clientes</code>
+                        </h3>
+                        <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+                            <table class="min-w-full bg-white text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-1/4">Campo</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-1/6">Tipo SQL</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr><td class="px-4 py-2 font-mono text-bank-primary font-bold">id_cliente</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) PK</td><td class="px-4 py-2">Identificador único del cliente.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">ingresos_mensuales</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(10,2)</td><td class="px-4 py-2">Ingreso líquido mensual.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">anios_empleo</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">Antigüedad laboral en años.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">tipo_contrato</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">Ej: 'indefinido', 'plazo_fijo', 'informal'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">deuda_total</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(10,2)</td><td class="px-4 py-2">Carga financiera total consolidada.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">limite_tc</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(10,2)</td><td class="px-4 py-2">Cupo total tarjetas de crédito.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">comportamiento_pago</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">Score interno (0-100).</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">fecha_alta_cliente</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DATE</td><td class="px-4 py-2">Fecha de vinculación. (Puede ser NULL).</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">edad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">Edad del cliente.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">sexo</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">CHAR(1)</td><td class="px-4 py-2">'M' o 'F'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">nacionalidad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(30)</td><td class="px-4 py-2">País de origen.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">comuna</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(50)</td><td class="px-4 py-2">Comuna de residencia.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">etnia</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(30)</td><td class="px-4 py-2">Grupo étnico (NULL o 'Mapuche').</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Solicitudes -->
+                    <div id="dic-solicitudes" class="mb-8">
+                        <h3 class="text-lg font-bold text-green-700 mb-3 bg-green-50 p-2 rounded border-l-4 border-green-500">
+                            Tabla: <code>solicitudes_credito</code>
+                        </h3>
+                        <div class="overflow-hidden rounded-lg border border-green-200 shadow-sm">
+                            <table class="min-w-full bg-white text-sm">
+                                <thead class="bg-green-50 border-b border-green-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-green-800 w-1/4">Campo</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-green-800 w-1/6">Tipo SQL</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-green-800">Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-green-50">
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700 font-bold">id_solicitud</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) PK</td><td class="px-4 py-2">ID único.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">id_cliente</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) FK</td><td class="px-4 py-2">Ref. Cliente.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">monto_solicitado</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(10,2)</td><td class="px-4 py-2">Monto en CLP.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">plazo_meses</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">12, 24, 36, 48.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">tipo_producto</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">'consumo', 'automotriz', 'hipotecario'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">canal_origen</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">'web', 'sucursal', 'movil'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">tasa_interes_anual</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(5,2)</td><td class="px-4 py-2">Tasa asignada.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">fecha_solicitud</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DATE</td><td class="px-4 py-2">Fecha registro.</td></tr>
+                                    <tr class="bg-yellow-50/50">
+                                        <td class="px-4 py-2 font-mono font-bold text-slate-800">incumplio</td>
+                                        <td class="px-4 py-2 font-mono text-xs text-slate-500 font-mono">TINYINT(4)</td>
+                                        <td class="px-4 py-2 font-bold text-slate-800">
+                                            <span class="bg-yellow-200 px-2 py-0.5 rounded mr-2 text-[10px]">TARGET</span>
+                                            1 = Default. 0 = OK.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Historial -->
+                    <div id="dic-historial" class="mb-8">
+                        <h3 class="text-lg font-bold text-slate-700 mb-3 bg-slate-100 p-2 rounded border-l-4 border-slate-500">
+                            Tabla: <code>historial_pagos</code>
+                        </h3>
+                        <div class="overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+                            <table class="min-w-full bg-white text-sm">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-1/4">Campo</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600 w-1/6">Tipo SQL</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700 font-bold">id_historial</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) PK</td><td class="px-4 py-2">ID único.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">id_cliente</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) FK</td><td class="px-4 py-2">Ref. Cliente.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">tipo_deuda</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">'tc', 'consumo', 'hipotecario'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">monto_cuota</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(10,2)</td><td class="px-4 py-2">Valor cuota.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">pagado</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">TINYINT(4)</td><td class="px-4 py-2">1 = Sí, 0 = No.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">dias_atraso</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">Mora en días.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">fecha_vencimiento</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DATE</td><td class="px-4 py-2">Vencimiento cuota.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">fecha_pago</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DATE</td><td class="px-4 py-2">Fecha real pago (NULL si impago).</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">estado_final</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">'al_dia', 'mora', 'castigo'.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Bienes Raices -->
+                    <div id="dic-bienes" class="mb-8">
+                        <h3 class="text-lg font-bold text-purple-700 mb-3 bg-purple-50 p-2 rounded border-l-4 border-purple-500">
+                            Tabla: <code>bienes_raices</code>
+                        </h3>
+                        <div class="overflow-hidden rounded-lg border border-purple-200 shadow-sm">
+                            <table class="min-w-full bg-white text-sm">
+                                <thead class="bg-purple-50 border-b border-purple-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-purple-800 w-1/4">Campo</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-purple-800 w-1/6">Tipo SQL</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-purple-800">Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-purple-50">
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700 font-bold">id_bien</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) PK</td><td class="px-4 py-2">ID único.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">id_cliente</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11) FK</td><td class="px-4 py-2">Dueño.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">tipo_propiedad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(20)</td><td class="px-4 py-2">'casa', 'departamento', 'terreno'.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">comuna_propiedad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(50)</td><td class="px-4 py-2">Comuna del bien.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">region_propiedad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(30)</td><td class="px-4 py-2">Región del bien.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">avaluo_fiscal</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(12,2)</td><td class="px-4 py-2">Tasación fiscal.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">hipotecado</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">TINYINT(4)</td><td class="px-4 py-2">1 = Sí, 0 = No.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">monto_hipoteca</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">DECIMAL(12,2)</td><td class="px-4 py-2">Monto deuda (NULL si no).</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">entidad_hipotecaria</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">VARCHAR(50)</td><td class="px-4 py-2">Banco acreedor.</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">meses_morosidad</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">INT(11)</td><td class="px-4 py-2">Cuotas impagas (0-24+).</td></tr>
+                                    <tr><td class="px-4 py-2 font-mono text-slate-700">en_remate</td><td class="px-4 py-2 text-xs text-slate-500 font-mono">TINYINT(4)</td><td class="px-4 py-2">1 = En juicio de remate.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- SECTION: COMUNAS (GEO) -->
+                <section id="geo" class="scroll-mt-24">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="h-8 w-1 bg-bank-accent rounded-full"></div>
+                        <h2 class="text-2xl font-bold text-slate-800">Alcance Geográfico</h2>
+                    </div>
+                    <p class="text-slate-600 mb-4">
+                        El Datawarehouse almacena información de clientes residentes en las siguientes comunas, abarcando diversas zonas geográficas y perfiles socioeconómicos del país.
+                    </p>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-2 gap-x-4 text-xs text-slate-600 font-mono">
+                            <!-- Norte -->
+                            <div class="font-bold text-bank-primary col-span-full pb-1 border-b border-slate-100 mt-2">Zona Norte</div>
+                            <div>Arica</div><div>Iquique</div><div>Alto Hospicio</div>
+                            <div>Antofagasta</div><div>Calama</div><div>Mejillones</div>
+                            <div>Copiapó</div><div>Vallenar</div><div>La Serena</div>
+                            <div>Coquimbo</div><div>Ovalle</div><div>Illapel</div>
+                            
+                            <!-- Centro / Valpo -->
+                            <div class="font-bold text-bank-primary col-span-full pb-1 border-b border-slate-100 mt-4">Zona Centro & Costa</div>
+                            <div>Valparaíso</div><div>Viña del Mar</div><div>Concón</div>
+                            <div>Zapallar</div><div>Quilpué</div><div>Villa Alemana</div>
+                            <div>San Antonio</div><div>Cartagena</div><div>Los Andes</div>
+                            <div>San Felipe</div><div>Quillota</div><div>Limache</div>
+                            <div>La Calera</div><div>Rancagua</div><div>Machalí</div>
+                            <div>San Fernando</div><div>Pichilemu</div>
+                            
+                            <!-- RM -->
+                            <div class="font-bold text-bank-primary col-span-full pb-1 border-b border-slate-100 mt-4">Región Metropolitana</div>
+                            <div>Santiago</div><div>Providencia</div><div>Las Condes</div>
+                            <div>Vitacura</div><div>Lo Barnechea</div><div>La Reina</div>
+                            <div>Ñuñoa</div><div>Macul</div><div>Peñalolén</div>
+                            <div>La Florida</div><div>Puente Alto</div><div>Maipú</div>
+                            <div>San Miguel</div><div>Estación Central</div><div>Independencia</div>
+                            <div>Recoleta</div><div>Huechuraba</div><div>Quilicura</div>
+                            <div>Pudahuel</div><div>Renca</div><div>Conchalí</div>
+                            <div>Cerro Navia</div><div>Lo Prado</div><div>Quinta Normal</div>
+                            <div>Lo Espejo</div><div>P. Aguirre Cerda</div><div>Cerrillos</div>
+                            <div>La Cisterna</div><div>La Granja</div><div>San Ramón</div>
+                            <div>La Pintana</div><div>San Joaquín</div><div>El Bosque</div>
+                            <div>San Bernardo</div><div>Talagante</div><div>Melipilla</div>
+                            <div>Colina</div><div>Lampa</div><div>Buin</div>
+                            <div>Paine</div><div>Pirque</div><div>San José de Maipo</div>
+                            <div>Padre Hurtado</div><div>Isla de Maipo</div><div>El Monte</div>
+
+                            <!-- Sur -->
+                            <div class="font-bold text-bank-primary col-span-full pb-1 border-b border-slate-100 mt-4">Zona Sur & Austral</div>
+                            <div>Talca</div><div>Curicó</div><div>Linares</div>
+                            <div>Constitución</div><div>Cauquenes</div><div>Chillán</div>
+                            <div>Concepción</div><div>Talcahuano</div><div>San Pedro de la Paz</div>
+                            <div>Chiguayante</div><div>Coronel</div><div>Lota</div>
+                            <div>Los Ángeles</div><div>Lebu</div><div>Arauco</div>
+                            <div>Tomé</div><div>Penco</div><div>Temuco</div>
+                            <div>Padre Las Casas</div><div>Villarrica</div><div>Pucón</div>
+                            <div>Valdivia</div><div>Osorno</div><div>Puerto Montt</div>
+                            <div>Puerto Varas</div><div>Frutillar</div><div>Castro</div>
+                            <div>Coyhaique</div><div>Punta Arenas</div><div>Puerto Natales</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: CONNECTION CREDENTIALS -->
+                <section id="connection" class="scroll-mt-24 mb-20">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="h-8 w-1 bg-bank-accent rounded-full"></div>
+                        <h2 class="text-2xl font-bold text-slate-800">Credenciales de Acceso</h2>
+                    </div>
+                    <p class="text-slate-600 mb-4">
+                        Utilice los siguientes parámetros para establecer la conexión JDBC/ODBC o mediante librerías de Python (SQLAlchemy/PyMySQL).
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Connection Card -->
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                            <div class="bg-bank-dark px-6 py-3 border-b border-slate-700 flex justify-between items-center">
+                                <span class="text-white font-bold tracking-wide"><i class="fa-solid fa-server mr-2"></i>Producción</span>
+                                <span class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded border border-green-500/30">ONLINE</span>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Host / Servidor</label>
+                                    <div class="flex items-center bg-slate-100 rounded p-2 border border-slate-200">
+                                        <code class="text-sm font-mono text-slate-800 flex-1 select-all">auth-db465.hstgr.io</code>
+                                        <i class="fa-solid fa-network-wired text-slate-400 ml-2"></i>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Base de Datos</label>
+                                    <div class="flex items-center bg-slate-100 rounded p-2 border border-slate-200">
+                                        <code class="text-sm font-mono text-slate-800 flex-1 select-all">u549055514_Banco_Turing</code>
+                                        <i class="fa-solid fa-database text-slate-400 ml-2"></i>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Usuario</label>
+                                        <div class="bg-slate-100 rounded p-2 border border-slate-200">
+                                            <code class="text-sm font-mono text-slate-800 select-all">u549055514_Turing</code>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Contraseña</label>
+                                        <div class="bg-slate-100 rounded p-2 border border-slate-200">
+                                            <code class="text-sm font-mono text-slate-800 select-all">Salmos#100</code>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="pt-2 text-xs text-slate-500 text-center">
+                                    Puerto estándar: <strong>3306</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connection String Helper -->
+                        <div class="flex flex-col justify-center">
+                            <div class="bg-slate-800 rounded-lg p-4 shadow-md border border-slate-700">
+                                <h4 class="text-white text-sm font-bold mb-2 border-b border-slate-600 pb-2">Python SQLAlchemy String</h4>
+                                <code class="text-xs font-mono text-blue-300 block break-all">
+                                    mysql+pymysql://u549055514_Turing:Salmos#100@auth-db465.hstgr.io/u549055514_Banco_Turing
+                                </code>
+                                <button onclick="copyString()" class="mt-3 w-full bg-bank-light hover:bg-blue-600 text-white text-xs font-bold py-2 rounded transition">
+                                    Copiar String de Conexión
+                                </button>
+                            </div>
+                            <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded shadow-sm">
+                                <p class="text-xs text-yellow-800">
+                                    <strong>Nota de Seguridad:</strong> Esta es una base de datos de solo lectura para propósitos educativos. No intente realizar operaciones INSERT/UPDATE/DELETE.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm">© 2025 Banco Turing - Gerencia de Tecnología y Datos.</p>
+            <p class="text-xs mt-2 text-slate-500">Documentación Oficial. Prohibida su reproducción externa.</p>
+        </div>
+    </footer>
+
+    <script>
+        function copyString() {
+            const str = "mysql+pymysql://u549055514_Turing:Salmos#100@auth-db465.hstgr.io/u549055514_Banco_Turing";
+            navigator.clipboard.writeText(str).then(() => {
+                alert('String de conexión copiado.');
+            });
+        }
+    </script>
+</body>
+</html>

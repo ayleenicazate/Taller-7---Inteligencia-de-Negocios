@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Banco Turing - Auditoría de Sesgos (Dashboard)</title>
+	<link rel="stylesheet" href="styles.css?v=2">
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+	<header class="app-header">
+		<h1>Auditoría de Sesgos - Scoring Turing</h1>
+		<p class="subtitle">Explora tasas de rechazo y scores por comuna, nacionalidad, sexo y edad.</p>
+	</header>
+
+	<section class="controls">
+		<div class="control">
+			<label for="comunaSelect">Comuna</label>
+			<select id="comunaSelect">
+				<option value="__ALL__">Todas</option>
+			</select>
+		</div>
+		<div class="control">
+			<label for="sexoSelect">Sexo</label>
+			<select id="sexoSelect">
+				<option value="__ALL__">Todos</option>
+				<option value="M">M</option>
+				<option value="F">F</option>
+			</select>
+		</div>
+		<div class="control">
+			<label for="nacionalidadSelect">Nacionalidad</label>
+			<select id="nacionalidadSelect">
+				<option value="__ALL__">Todas</option>
+			</select>
+		</div>
+		<div class="control">
+			<label for="bandaIngresos">Banda de ingresos</label>
+			<select id="bandaIngresos">
+				<option value="ALL">Todas</option>
+				<option value="0-500k">$0 - $500k</option>
+				<option value="500k-1M">$500k - $1M</option>
+				<option value="1M-2M">$1M - $2M</option>
+				<option value="2M-5M">$2M - $5M</option>
+				<option value="5M+">$5M+</option>
+			</select>
+		</div>
+		<div class="control">
+			<label for="ingresosRange">Ingresos Mensuales (CLP)</label>
+			<input type="range" id="ingresosRange" min="0" max="10000000" step="50000" value="10000000">
+			<span id="ingresosRangeValue">≤ $10.000.000</span>
+		</div>
+		<div class="control">
+			<label for="edadRange">Edad (años)</label>
+			<input type="range" id="edadRange" min="18" max="90" step="1" value="90">
+			<span id="edadRangeValue">≤ 90</span>
+		</div>
+	</section>
+
+	<main class="dashboard">
+		<section class="viz-card">
+			<h2>1) Tasa de rechazo por comuna (a igual nivel de ingreso)</h2>
+			<div id="viz1"></div>
+			<p class="caption">
+				<span id="sub1">Filtra por banda de ingresos para comparar comunas en el mismo tramo.</span>
+			</p>
+		</section>
+
+		<section class="viz-card">
+			<h2>2) Score por nacionalidad (chilena vs extranjera)</h2>
+			<div id="viz2"></div>
+			<p class="caption">
+				<span id="sub2">Distribución del score de riesgo por atributo de nacionalidad dentro de la banda de ingresos seleccionada.</span>
+			</p>
+		</section>
+
+		<section class="viz-card">
+			<h2>3) ¿Existen grupos de edad excluidos?</h2>
+			<div id="viz3"></div>
+			<p class="caption">
+				<span id="sub3">Histograma por edad con línea de tasa de rechazo; picos altos implican exclusión relativa.</span>
+			</p>
+		</section>
+	</main>
+
+	<footer class="app-footer">
+		<span>Banco Turing · Dashboard de Auditoría</span>
+	</footer>
+
+	<script src="app.js?v=2"></script>
+</body>
+</html>
+
