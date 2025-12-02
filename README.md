@@ -2,7 +2,16 @@
 
 Este proyecto construye un dataset unificado (DB + API de scoring) y un dashboard D3.js con 3 visualizaciones coordinadas para detectar posibles sesgos del modelo (“Scoring Turing”).
 
-## 1) Requisitos
+## 1) Objetivo y contexto
+
+La gerencia sospecha que el modelo de crédito “Scoring Turing” podría discriminar por comuna, nacionalidad/sexo o edad. Este trabajo no corrige el modelo: lo “acusa” mediante un dashboard que muestra patrones de rechazo y score controlando por ingreso.
+
+Preguntas de negocio (Por qué):
+- ¿La tasa de rechazo es más alta en comunas pobres a igual nivel de ingreso?
+- ¿Se castiga el score solo por ser extranjero?
+- ¿Existen grupos de edad excluidos?
+
+## 2) Requisitos
 
 - Python 3.9+
 - Pip
@@ -13,12 +22,12 @@ Instala dependencias:
 pip install -r requirements.txt
 ```
 
-## 2) ETL: Extracción y Enriquecimiento
+## 3) ETL: Extracción y Enriquecimiento
 
 El script `etl.py`:
 1. Extrae clientes desde MySQL (solo lectura).
 2. Llama a `predict_batch` para obtener `score_riesgo` y `decision_legacy`.
-3. Genera `web/data.json` que alimenta el dashboard.
+3. Genera `docs/data.json` que alimenta el dashboard (listo para GitHub Pages).
 
 Credenciales por defecto (puedes sobreescribir con variables de entorno):
 
@@ -28,7 +37,7 @@ Credenciales por defecto (puedes sobreescribir con variables de entorno):
 - `BT_DB_PASS` (default: `Salmos#100`)
 - `BT_DB_PORT` (default: `3306`)
 - `BT_PREDICT_URL` (default: `https://scoring-bancoturing.semilla42.com/predict_batch`)
-- `BT_OUTPUT_PATH` (default: `web/data.json`)
+- `BT_OUTPUT_PATH` (default: `docs/data.json`)
 
 Ejecuta:
 
@@ -39,43 +48,47 @@ python etl.py
 Al finalizar, verás `web/data.json` con los campos esenciales:
 `id_cliente, comuna, ingresos_mensuales, edad, sexo, nacionalidad, etnia, score_riesgo, decision_legacy, decision`.
 
-## 3) Dashboard D3.js
+## 4) Dashboard D3.js
 
-Archivos:
-- `web/index.html`
-- `web/styles.css`
-- `web/app.js`
-- `web/data.json` (generado por el ETL)
+Estructura:
+- `docs/index.html` (página principal para publicar)
+- `docs/styles.css`
+- `docs/app.js`
+- `docs/data.json` (generado por el ETL)
 
 Cómo visualizar en local (opciones):
 
-- Abrir `web/index.html` directamente en el navegador (si tu navegador permite cargar `data.json` local).
-- O servir la carpeta `web/` con un servidor simple, por ejemplo con Python:
+- Abrir `docs/index.html` directamente en el navegador (algunos navegadores bloquean fetch a archivos locales).
+- O servir la carpeta `docs/` con un servidor simple, por ejemplo con Python:
 
 ```bash
-cd web
+cd docs
 python -m http.server 8000
 # Visita: http://localhost:8000
 ```
 
-## 4) Visualizaciones
+## 5) Visualizaciones (3 coordinadas)
 
-1. Tasa de rechazo por comuna con control de ingresos (barras, top 12).  
-2. Tasa por sexo y nacionalidad (dos paneles comparativos).  
-3. Histograma de edad con apilamiento Aprobado vs Rechazado.  
+1) Tasa de rechazo por comuna (barras, top 12). Use “Banda de ingresos”/umbrales para comparar comunas a igual nivel de ingreso. Tooltip muestra n y rechazados. Ajusta el mínimo de muestra (por defecto n≥20) en `app.js` si lo requieres.
 
-Filtros globales: comuna, sexo, nacionalidad, umbral de ingresos y edad máxima. Las tres vistas se coordinan al cambiar filtros.
+2) Score por nacionalidad: boxplot (Chilena vs Extranjera) con puntos jitter y Δ de medias. Se interpreta la diferencia de medias dentro del mismo tramo de ingresos. Si Δ<0 (Extranjera menor), hay evidencia de castigo a extranjeros.
 
-## 5) Despliegue (Enlace Web)
+3) ¿Grupos de edad excluidos? Histograma por edad (aprobado/rechazado) con una línea de tasa de rechazo. Picos altos indican tramos etarios con mayor probabilidad de rechazo relativo.
 
-Puedes publicar la carpeta `web/` en:
-- GitHub Pages: sube a un repo y configura Pages apuntando a `/web` o rama `gh-pages`.
-- Netlify: arrastra y suelta la carpeta `web/` o conecta el repo y define `web` como directorio de publicación.
+Filtros globales: comuna, sexo, nacionalidad, banda/umbral de ingresos y edad máxima. Las 3 vistas se coordinan.
 
-## 6) Notas
+Subtítulos dinámicos: bajo cada gráfico se resume el “top” o las diferencias relevantes (top comunas por tasa, Δ de medias en score, tramo etario con mayor tasa).
+
+## 6) Despliegue (Enlace Web)
+
+Publicar `docs/`:
+- GitHub Pages: Settings → Pages → Source: Deploy from a branch → Branch: `main` / Folder: `/docs`.
+- Netlify: directorio de publicación = `docs/`.
+
+## 7) Notas
 
 - El ETL usa lotes (batch) para la API. Ajusta `batch_size` en `etl.py` si lo requieres.
 - Si la API retorna nombres alternativos de campos, el script intentará mapearlos a `score_riesgo` y `decision_legacy`.
-- El dashboard evita gráficos de torta y prioriza color/posición/tamaño con ejes y leyendas claras.
+- El dashboard evita tortas y prioriza color/posición/tamaño con ejes/leyendas claras. Las vistas están coordinadas y tienen filtros interactivos.
 
 

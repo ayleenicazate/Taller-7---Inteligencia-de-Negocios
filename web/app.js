@@ -160,6 +160,32 @@ function viz1(container, data) {
 		.attr("class", "axis")
 		.call(d3.axisLeft(y).tickFormat(d3.format(".0%")));
 
+	// Etiquetas de ejes
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("x", (W) / 2)
+		.attr("y", H - M.bottom + 36)
+		.attr("text-anchor", "middle")
+		.text("Comuna");
+
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("transform", "rotate(-90)")
+		.attr("x", -(H) / 2)
+		.attr("y", M.left - 44)
+		.attr("text-anchor", "middle")
+		.text("Tasa de rechazo");
+
+	// Badge informativa (n y filtro de ingresos)
+	const badgeText = (() => {
+		const band = getIncomeBandRange(state.bandaIngresos);
+		if (band) return `n=${d3.format(",")(data.length)} • Banda ingresos: ${fmtCLP(band[0])}–${band[1] === Infinity ? "∞" : "$"+fmtCLP(band[1])}`;
+		return `n=${d3.format(",")(data.length)} • Ingreso ≤ $${fmtCLP(state.maxIngresos)}`;
+	})();
+	const bx = W - M.right - 280, by = M.top - 18, bw = 270, bh = 22;
+	svg.append("rect").attr("class", "badge").attr("x", bx).attr("y", by).attr("rx", 6).attr("ry", 6).attr("width", bw).attr("height", bh);
+	svg.append("text").attr("class", "badge-text").attr("x", bx + 10).attr("y", by + 14).text(badgeText);
+
 	const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 
 	svg.selectAll(".bar")
@@ -229,6 +255,22 @@ function viz2(container, data) {
 	// Ejes
 	svg.append("g").attr("transform", `translate(0,${H - M.bottom})`).attr("class", "axis").call(d3.axisBottom(x));
 	svg.append("g").attr("transform", `translate(${M.left},0)`).attr("class", "axis").call(d3.axisLeft(y).ticks(6));
+
+	// Etiquetas e info
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("x", (W) / 2)
+		.attr("y", H - M.bottom + 36)
+		.attr("text-anchor", "middle")
+		.text("Nacionalidad");
+
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("transform", "rotate(-90)")
+		.attr("x", -(H) / 2)
+		.attr("y", M.left - 44)
+		.attr("text-anchor", "middle")
+		.text("Score de riesgo");
 
 	// Boxplots
 	const boxWidth = Math.min(60, x.bandwidth());
@@ -320,6 +362,30 @@ function viz3(container, data) {
 		.attr("transform", `translate(${W - M.right},0)`)
 		.attr("class", "axis")
 		.call(d3.axisRight(yRate).tickFormat(d3.format(".0%")));
+
+	// Etiquetas de ejes
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("x", (W) / 2)
+		.attr("y", H - M.bottom + 36)
+		.attr("text-anchor", "middle")
+		.text("Edad (años)");
+
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("transform", "rotate(-90)")
+		.attr("x", -(H) / 2)
+		.attr("y", M.left - 44)
+		.attr("text-anchor", "middle")
+		.text("Conteo");
+
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("transform", `rotate(-90)`)
+		.attr("x", -(H) / 2)
+		.attr("y", W - 6)
+		.attr("text-anchor", "end")
+		.text("Tasa de rechazo");
 
 	const colorA = "#3b82f6";
 	const colorR = "#ef4444";
@@ -540,6 +606,65 @@ function render() {
 	viz1(c1, filtered);
 	viz2(c2, filtered);
 	viz3(c3, filtered);
+
+	// Subtítulos dinámicos para interpretación gerencial
+	try {
+		// 1) Comunas: top 3 por tasa con mínimo n
+		const MIN_N = 20;
+		const byComuna = d3.rollups(
+			filtered,
+			v => {
+				const n = v.length;
+				const r = v.filter(x => x.decision === "Rechazado").length;
+				return { n, r, tasa: n ? r / n : 0 };
+			},
+			d => d.comuna
+		).map(([k, s]) => ({ comuna: k, ...s }))
+		 .filter(d => d.n >= MIN_N)
+		 .sort((a, b) => d3.descending(a.tasa, b.tasa));
+		const top3 = byComuna.slice(0, 3).map(d => `${d.comuna} (${d3.format(".0%")(d.tasa)})`).join(", ");
+		const totalN = filtered.length;
+		const s1 = top3 ? `Top comunas (n≥${MIN_N}): ${top3}. Registros filtrados: n=${d3.format(",")(totalN)}.`
+		                : `No hay suficientes casos por comuna (n≥${MIN_N}) con los filtros actuales. Registros: n=${d3.format(",")(totalN)}.`;
+		const sub1 = document.getElementById("sub1"); if (sub1) sub1.textContent = s1;
+
+		// 2) Nacionalidad: medias y Δ
+		const groupLabel = d => (d.nacionalidad && d.nacionalidad.trim().toLowerCase() === "chilena") ? "Chilena" : "Extranjera";
+		const withScore = filtered.filter(d => d.score_riesgo != null);
+		const byNac = d3.groups(withScore, groupLabel).map(([k, arr]) => ({
+			key: k,
+			n: arr.length,
+			mean: d3.mean(arr, d => d.score_riesgo)
+		}));
+		const chil = byNac.find(d => d.key === "Chilena");
+		const ext  = byNac.find(d => d.key === "Extranjera");
+		let s2 = "Sin datos de score para comparar nacionalidad con los filtros actuales.";
+		if (chil && ext) {
+			const delta = ext.mean - chil.mean;
+			s2 = `Media Chilena: ${d3.format(".2f")(chil.mean)} (n=${d3.format(",")(chil.n)}); ` +
+			     `Media Extranjera: ${d3.format(".2f")(ext.mean)} (n=${d3.format(",")(ext.n)}); ` +
+			     `Δ (Extranjera − Chilena): ${d3.format(".2f")(delta)}.`;
+		}
+		const sub2 = document.getElementById("sub2"); if (sub2) sub2.textContent = s2;
+
+		// 3) Edad: tramo con mayor tasa de rechazo
+		const ages = filtered.filter(d => d.edad >= 18 && d.edad <= 90);
+		const x = d3.scaleLinear().domain([18, 90]);
+		const bins = d3.bin().domain(x.domain()).thresholds(18).value(d => d.edad)(ages);
+		const stats = bins.map(b => {
+			const n = b.length;
+			const r = b.filter(d => d.decision === "Rechazado").length;
+			return { x0: b.x0, x1: b.x1, n, tasa: n ? r / n : 0 };
+		});
+		const best = stats.sort((a, b) => d3.descending(a.tasa, b.tasa))[0];
+		let s3 = "No hay casos en el rango etario con los filtros actuales.";
+		if (best && isFinite(best.tasa)) {
+			s3 = `Tramo con mayor rechazo: ${best.x0}–${best.x1} años, tasa ${d3.format(".0%")(best.tasa)} (n=${d3.format(",")(best.n)}).`;
+		}
+		const sub3 = document.getElementById("sub3"); if (sub3) sub3.textContent = s3;
+	} catch (_) {
+		// Silenciar ante cualquier dato atípico para no romper la UI
+	}
 }
 
 /* Boot */

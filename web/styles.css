@@ -112,6 +112,20 @@ body {
 	font-size: 12px;
 	fill: var(--muted);
 }
+.axis-label {
+	fill: #cbd5e1;
+	font-size: 12px;
+}
+.badge {
+	fill: #0f172a;
+	stroke: #223057;
+	stroke-width: 1;
+	opacity: 0.9;
+}
+.badge-text {
+	fill: #e2e8f0;
+	font-size: 11px;
+}
 .bar {
 	shape-rendering: crispEdges;
 }
